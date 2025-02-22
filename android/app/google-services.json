@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "558176400229",
+    "project_id": "sneh-project-90b29",
+    "storage_bucket": "sneh-project-90b29.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:558176400229:android:e4ac5a5907292ecface78c",
+        "android_client_info": {
+          "package_name": "com.example.sneh"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB6IRyKSEaDJm1VSgM0qgfkYLufX5s9_oQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
