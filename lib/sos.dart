@@ -1,151 +1,130 @@
 import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart'; // For location
-//import 'package:url_launcher/url_launcher.dart'; // For maps/phone calls
-import 'package:http/http.dart' as http; // For API calls (if needed)
-import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:html' as html;
 
-import 'package:myapp/nearbyHospital.dart'; // For JSON handling (if needed)
-
-class SOSScreen extends StatefulWidget {
-  const SOSScreen({super.key});
-
+class SOSDetector extends StatefulWidget {
   @override
-  _SOSScreenState createState() => _SOSScreenState();
+  _SOSDetectorState createState() => _SOSDetectorState();
 }
 
-class _SOSScreenState extends State<SOSScreen> {
-  bool _isSOSActive = false;
-  Position? _currentLocation;
+class _SOSDetectorState extends State<SOSDetector> {
+  List<String> emergencyContacts = [];
+  final TextEditingController _contactController = TextEditingController();
 
-  Future<void> _getCurrentLocation() async {
-    bool serviceEnabled;
-    LocationPermission permission;
-
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      return Future.error('Location services are disabled.');
-    }
-
-    permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        return Future.error('Location permissions are denied');
-      }
-    }
-
-    if (permission == LocationPermission.deniedForever) {
-      return Future.error(
-          'Location permissions are permanently denied, we cannot request permissions.');
-    }
-
-    _currentLocation = await Geolocator.getCurrentPosition();
-    setState(() {}); // Update UI
+  @override
+  void initState() {
+    super.initState();
+    _loadContacts();
   }
 
-  Future<void> _sendSOS() async {
-    if (_currentLocation == null) {
-      await _getCurrentLocation(); // Get location if not available
-      if (_currentLocation == null) {
-        // Handle the case where location is still not available
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Could not get location.')));
-        return;
-      }
-    }
-
+  void _loadContacts() async {
+    final prefs = await SharedPreferences.getInstance();
     setState(() {
-      _isSOSActive = true;
+      emergencyContacts = prefs.getStringList('emergencyContacts') ?? [];
     });
+  }
 
-    // 1. Send Location to Hospital (using API - preferred)
-    // Example using http package (replace with your actual API endpoint and data format)
-    final url = Uri.parse('YOUR_HOSPITAL_API_ENDPOINT'); // *REPLACE THIS*
-    final data = {
-      'latitude': _currentLocation!.latitude,
-      'longitude': _currentLocation!.longitude,
-      // ... any other data you need to send (e.g., user info)
-    };
+  void _saveContacts() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList('emergencyContacts', emergencyContacts);
+  }
 
-    try {
-      final response = await http.post(url,
-          body: jsonEncode(data),
-          headers: {'Content-Type': 'application/json'});
-      if (response.statusCode == 200) {
-        // Success!
-        print('SOS sent successfully!');
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('SOS sent successfully!')));
-      } else {
-        // Error
-        print('Error sending SOS: ${response.statusCode}');
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Error sending SOS.')));
-      }
-    } catch (e) {
-      print('Error sending SOS: $e');
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Error sending SOS.')));
+  void _sendSOSMessage() {
+    String message = "SOS! I need help!";
+    for (String contact in emergencyContacts) {
+      // For web, we'll just open the default email client
+      final Uri emailLaunchUri = Uri(
+        scheme: 'mailto',
+        path: contact,
+        query: encodeQueryParameters(<String, String>{
+          'subject': 'SOS Message',
+          'body': message
+        }),
+      );
+      html.window.open(emailLaunchUri.toString(), 'mail');
     }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('SOS message prepared for emergency contacts')),
+    );
+  }
 
-    // 2. (Alternative) Open Maps App with Location (less ideal for automatic dispatch)
-    // if (Platform.isAndroid) {
-    //   String url =
-    //       "https://www.google.com/maps/search/?api=1&query=${_currentLocation!.latitude},${_currentLocation!.longitude}";
-    //   if (await canLaunch(url)) {
-    //     await launch(url);
-    //   } else {
-    //     throw 'Could not launch $url';
-    //   }
-    // } else if (Platform.isIOS) {
-    //   String url =
-    //       "http://maps.apple.com/?ll=${_currentLocation!.latitude},${_currentLocation!.longitude}";
-    //   if (await canLaunch(url)) {
-    //     await launch(url);
-    //   } else {
-    //     throw 'Could not launch $url';
-    //   }
-    // }
+  String encodeQueryParameters(Map<String, String> params) {
+    return params.entries
+        .map((e) => '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}')
+        .join('&');
+  }
 
+  void _addContact() {
+    if (_contactController.text.isNotEmpty) {
+      setState(() {
+        emergencyContacts.add(_contactController.text);
+        _contactController.clear();
+      });
+      _saveContacts();
+    }
+  }
+
+  void _removeContact(int index) {
     setState(() {
-      _isSOSActive = false; // Reset SOS button
+      emergencyContacts.removeAt(index);
     });
+    _saveContacts();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('SOS App')),
-      body: Center(
+      appBar: AppBar(
+        title: Text('SOS Detector'),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            ElevatedButton(
-              onPressed: () {
-                try {
-                  print("Navigating to HospitalListPage...");
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const HospitalListPage()),
-                  );
-                  print("Navigation success!");
-                } catch (e) {
-                  print("Navigation Error: $e");
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.all(20),
-                textStyle: const TextStyle(fontSize: 24),
-              ),
-              child: Text(_isSOSActive ? 'Sending SOS...' : 'SOS'),
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'Click the SOS button to send an emergency message.',
+              style: TextStyle(fontSize: 16),
             ),
-            if (_currentLocation != null)
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Text(
-                    'Location: ${_currentLocation!.latitude}, ${_currentLocation!.longitude}'),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _sendSOSMessage,
+              child: Text('SOS'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                padding: EdgeInsets.symmetric(vertical: 20),
               ),
+            ),
+            SizedBox(height: 20),
+            Text(
+              'Emergency Contacts:',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            Expanded(
+              child: ListView.builder(
+                itemCount: emergencyContacts.length,
+                itemBuilder: (context, index) {
+                  return ListTile(
+                    title: Text(emergencyContacts[index]),
+                    trailing: IconButton(
+                      icon: Icon(Icons.delete),
+                      onPressed: () => _removeContact(index),
+                    ),
+                  );
+                },
+              ),
+            ),
+            TextField(
+              controller: _contactController,
+              decoration: InputDecoration(
+                labelText: 'Add Emergency Contact (Email)',
+                suffixIcon: IconButton(
+                  icon: Icon(Icons.add),
+                  onPressed: _addContact,
+                ),
+              ),
+              keyboardType: TextInputType.emailAddress,
+            ),
           ],
         ),
       ),
@@ -153,338 +132,295 @@ class _SOSScreenState extends State<SOSScreen> {
   }
 }
 
+// ignore_for_file: deprecated_member_use
+
 // import 'dart:async';
 // import 'package:flutter/material.dart';
-// import 'package:google_maps_flutter/google_maps_flutter.dart';
-// import 'package:location/location.dart';
-// import 'package:google_maps_webservice/places.dart';
+// import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 // import 'package:permission_handler/permission_handler.dart';
-// import 'package:location/location.dart';
+// import 'package:sensors_plus/sensors_plus.dart';
 
 // void main() {
-//   runApp(const SOSApp());
+//   runApp(MyApp());
 // }
 
-// class SOSApp extends StatelessWidget {
-//   const SOSApp({super.key});
-
+// class MyApp extends StatelessWidget {
 //   @override
 //   Widget build(BuildContext context) {
 //     return MaterialApp(
-//       title: 'SOS App',
+//       title: 'Wristband Monitor',
 //       theme: ThemeData(
-//         primarySwatch: Colors.blue,
+//         primarySwatch: Colors.red,
 //       ),
-//       home: const SOSScreen(),
+//       home: MyHomePage(),
 //     );
 //   }
 // }
 
-// class SOSScreen extends StatefulWidget {
-//   const SOSScreen({super.key});
-
+// class MyHomePage extends StatefulWidget {
 //   @override
-//   State<SOSScreen> createState() => _SOSScreenState();
+//   _MyHomePageState createState() => _MyHomePageState();
 // }
 
-// class _SOSScreenState extends State<SOSScreen> {
-//   late GoogleMapController mapController;
-//   LatLng _currentLocation = LatLng(0, 0);
-//   Set<Marker> _markers = {};
-//   Location location = Location();
-//   late LocationData _currentLocationData;
-
-//   // Google Maps Web Service client
-//   final googleMaps = GoogleMapsPlaces(apiKey: 'YOUR_GOOGLE_API_KEY');
+// class _MyHomePageState extends State<MyHomePage> {
+//   FlutterBluePlus flutterBlue = FlutterBluePlus();
+//   BluetoothDevice? connectedDevice;
+//   List<BluetoothService> services = [];
+//   Map<Guid, List<int>> characteristicValues = {};
+//   bool isSafe = true;
+//   bool sosTriggered = false;
+//   List<double>? _gyroscopeValues;
+//   StreamSubscription<GyroscopeEvent>? _gyroscopeStream;
+//   BluetoothAdapterState bluetoothState = BluetoothAdapterState.unknown;
+//   StreamSubscription<BluetoothAdapterState>? _bluetoothStateSubscription;
+//   String connectionStatus = "Not Connected";
 
 //   @override
 //   void initState() {
 //     super.initState();
 //     _checkPermissions();
-//     _getLocation();
+//     _startGyroscope();
+//     _listenBluetoothState();
 //   }
 
-//   // Check for location permissions
+//   @override
+//   void dispose() {
+//     _gyroscopeStream?.cancel();
+//     _bluetoothStateSubscription?.cancel();
+//     super.dispose();
+//   }
+
 //   Future<void> _checkPermissions() async {
-//     var status = await Permission.location.request();
-//     if (status.isGranted) {
-//       _getLocation();
+//     await [
+//       Permission.bluetooth,
+//       Permission.bluetoothConnect,
+//       Permission.bluetoothScan,
+//       Permission.locationWhenInUse,
+//     ].request();
+
+//     if (await Permission.bluetooth.request().isGranted &&
+//         await Permission.bluetoothConnect.request().isGranted &&
+//         await Permission.bluetoothScan.request().isGranted &&
+//         await Permission.locationWhenInUse.request().isGranted) {
+//       print("All Bluetooth permissions granted!");
 //     } else {
-//       print('Location permission denied');
+//       print("Bluetooth or Location permissions denied.");
 //     }
 //   }
 
-//   // Get current location
-//   Future<void> _getLocation() async {
-//     _currentLocationData = await location.getLocation();
-//     setState(() {
-//       _currentLocation = LatLng(
-//         _currentLocationData.latitude!,
-//         _currentLocationData.longitude!,
-//       );
+//   void _listenBluetoothState() {
+//     _bluetoothStateSubscription = FlutterBluePlus.adapterState.listen((state) {
+//       setState(() {
+//         bluetoothState = state;
+//       });
 //     });
-//     _fetchNearbyHospitals();
 //   }
 
-//   // Fetch nearby hospitals using Google Places API
-//   Future<void> _fetchNearbyHospitals() async {
-//     final result = await googleMaps.searchNearbyWithRadius(
-//       Location(_currentLocation.latitude, _currentLocation.longitude),
-//       5000, // Search radius in meters
-//       type: "hospital", // Search for hospitals
-//     );
+//   Future<void> _startScan() async {
+//     if (bluetoothState != BluetoothAdapterState.on) {
+//       print("Bluetooth is not enabled.");
+//       await FlutterBluePlus.turnOn();
+//       return;
+//     }
 
 //     setState(() {
-//       _markers.clear();
-//       for (var place in result.results) {
-//         _markers.add(
-//           Marker(
-//             markerId: MarkerId(place.placeId ?? ''),
-//             position: LatLng(
-//               place.geometry!.location.lat,
-//               place.geometry!.location.lng,
-//             ),
-//             infoWindow: InfoWindow(
-//               title: place.name,
-//               snippet: place.vicinity,
-//             ),
-//           ),
-//         );
+//       connectedDevice = null;
+//       services = [];
+//       characteristicValues = {};
+//       connectionStatus = "Scanning...";
+//     });
+
+//     FlutterBluePlus.startScan(timeout: Duration(seconds: 4));
+
+//     FlutterBluePlus.scanResults.listen((results) {
+//       for (ScanResult r in results) {
+//         if (r.device.name.isNotEmpty &&
+//             r.device.name.toLowerCase().contains('wrist')) {
+//           _connectToDevice(r.device);
+//           FlutterBluePlus.stopScan();
+//           return;
+//         }
+//       }
+//     });
+
+//     Future.delayed(Duration(seconds: 4), () {
+//       if (connectedDevice == null) {
+//         setState(() {
+//           connectionStatus = "Scan finished, device not found";
+//         });
 //       }
 //     });
 //   }
 
-//   // Move map camera to user's location
-//   void _moveToUserLocation() {
-//     mapController.animateCamera(
-//       CameraUpdate.newLatLngZoom(_currentLocation, 14),
-//     );
+//   Future<void> _connectToDevice(BluetoothDevice device) async {
+//     try {
+//       setState(() {
+//         connectionStatus = "Connecting...";
+//       });
+//       await device.connect();
+//       setState(() {
+//         connectedDevice = device;
+//         connectionStatus = "Connected";
+//       });
+//       device.state.listen((state) {
+//         if (state == BluetoothDeviceState.disconnected) {
+//           setState(() {
+//             connectedDevice = null;
+//             connectionStatus = "Disconnected";
+//           });
+//         }
+//         if (state == BluetoothDeviceState.connected && services.isEmpty) {
+//           _discoverServices(device);
+//         }
+//       });
+//       _discoverServices(device);
+//     } catch (e) {
+//       print("Error connecting to device: $e");
+//       setState(() {
+//         connectionStatus = "Connection Error";
+//       });
+//     }
 //   }
 
-//   // SOS button action
-//   void _onSOSButtonPressed() {
-//     _checkPermissions();
-//     _moveToUserLocation();
+//   Future<void> _discoverServices(BluetoothDevice device) async {
+//     try {
+//       services = await device.discoverServices();
+//       setState(() {
+//         services = services;
+//       });
+//       _readCharacteristics();
+//     } catch (e) {
+//       print("Error discovering services: $e");
+//     }
+//   }
+
+//   Future<void> _readCharacteristics() async {
+//     if (connectedDevice == null) return;
+
+//     for (BluetoothService service in services) {
+//       for (BluetoothCharacteristic characteristic in service.characteristics) {
+//         try {
+//           if (characteristic.properties.read) {
+//             List<int> value = await characteristic.read();
+//             setState(() {
+//               characteristicValues[characteristic.uuid] = value;
+//             });
+//             _processHealthData(characteristic.uuid, value);
+//           }
+//           if (characteristic.properties.notify) {
+//             await characteristic.setNotifyValue(true);
+//             characteristic.value.listen((value) {
+//               setState(() {
+//                 characteristicValues[characteristic.uuid] = value;
+//               });
+//               _processHealthData(characteristic.uuid, value);
+//             });
+//           }
+//         } catch (e) {
+//           print("Error reading characteristic: $e");
+//         }
+//       }
+//     }
+//   }
+
+//   void _processHealthData(Guid uuid, List<int> value) {
+//     // Implement health data processing here.
+//     // Example: Heart rate or other data.
+//     if (uuid == Guid("00002a37-0000-1000-8000-00805f9b34fb")) {
+//       int heartRate = value[1];
+//       if (heartRate > 150) {
+//         setState(() {
+//           isSafe = false;
+//           sosTriggered = true;
+//         });
+//         _triggerSOS();
+//       }
+//       print("Heart Rate: $heartRate");
+//     }
+//   }
+
+//   void _startGyroscope() {
+//     _gyroscopeStream = gyroscopeEvents.listen((GyroscopeEvent event) {
+//       setState(() {
+//         _gyroscopeValues = <double>[event.x, event.y, event.z];
+//       });
+//       _checkGyroscopeData();
+//     });
+//   }
+
+//   void _checkGyroscopeData() {
+//     if (_gyroscopeValues == null) return;
+//     double x = _gyroscopeValues![0];
+//     double y = _gyroscopeValues![1];
+//     double z = _gyroscopeValues![2];
+
+//     double magnitude = x * x + y * y + z * z;
+
+//     if (magnitude > 10 && !sosTriggered) {
+//       // Adjust threshold as needed
+//       setState(() {
+//         isSafe = false;
+//         sosTriggered = true;
+//       });
+//       _triggerSOS();
+//     } else {
+//       setState(() {
+//         isSafe = true;
+//       });
+//     }
+//   }
+
+//   void _triggerSOS() {
+//     print("SOS Triggered!");
+//     showDialog(
+//       context: context,
+//       builder: (context) => AlertDialog(
+//         title: Text("Emergency!"),
+//         content: Text("An emergency has been detected. Help is on the way."),
+//         actions: [
+//           TextButton(
+//             onPressed: () => Navigator.pop(context),
+//             child: Text("OK"),
+//           ),
+//         ],
+//       ),
+//     );
 //   }
 
 //   @override
 //   Widget build(BuildContext context) {
 //     return Scaffold(
 //       appBar: AppBar(
-//         title: const Text('SOS App'),
-//         actions: [
-//           IconButton(
-//             icon: const Icon(Icons.location_on),
-//             onPressed: _onSOSButtonPressed,
-//           ),
-//         ],
+//         title: Text('Wristband Monitor'),
 //       ),
-//       body: Stack(
-//         children: [
-//           GoogleMap(
-//             initialCameraPosition: CameraPosition(
-//               target: _currentLocation,
-//               zoom: 14,
-//             ),
-//             markers: _markers,
-//             onMapCreated: (controller) {
-//               mapController = controller;
-//             },
-//           ),
-//           Positioned(
-//             bottom: 20,
-//             left: 20,
-//             child: ElevatedButton(
-//               onPressed: _onSOSButtonPressed,
-//               child: const Text('SOS'),
-//               style: ElevatedButton.styleFrom(
-//                 padding: const EdgeInsets.symmetric(
-//                     vertical: 12.0, horizontal: 25.0), backgroundColor: Colors.red,
-//               ),
-//             ),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-// }
-
-// import 'package:flutter/material.dart';
-// import 'package:geolocator/geolocator.dart';
-// import 'package:google_maps_flutter/google_maps_flutter.dart';
-// import 'package:http/http.dart' as http;
-// import 'dart:convert';
-// import 'package:permission_handler/permission_handler.dart';
-
-
-// class SOSScreen extends StatefulWidget {
-//   @override
-//   _SOSScreenState createState() => _SOSScreenState();
-// }
-
-// class _SOSScreenState extends State<SOSScreen> {
-//   bool _isSOSActive = false;
-//   Position? _currentLocation;
-//   List<Hospital> _nearbyHospitals = [];
-//   Set<Marker> _markers = {};
-//   GoogleMapController? _mapController;
-//   bool _isLoading = false;
-
-//   Future<void> _getCurrentLocation() async {
-//     // ... (Permission and service check logic remains the same)
-
-//     try {
-//       _currentLocation = await Geolocator.getCurrentPosition();
-//       setState(() {
-//         _isLoading = false;
-//       });
-//       _getNearbyHospitals(); // Call after getting location
-//     } catch (e) {
-//       // ... (Error handling as before)
-//     }
-//   }
-
-//   Future<void> _getNearbyHospitals() async {
-//     if (_currentLocation == null) return;
-
-//     setState(() {
-//       _isLoading = true;
-//     });
-
-//     final apiKey = 'AIzaSyDXUY6i7OopJPsQqt_8UtXmJ0FrXdpErP0'; 
-
-//     if (apiKey.isEmpty) {
-//       // ... (API key missing error as before)
-//       return;
-//     }
-
-//     final url = Uri.parse(
-//         'https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${_currentLocation!.latitude},${_currentLocation!.longitude}&radius=10000&type=hospital&key=$apiKey');
-
-//     try {
-//       final response = await http.get(url);
-
-//       if (response.statusCode == 200) {
-//         final jsonData = jsonDecode(response.body);
-//         final status = jsonData['status'];
-
-//         if (status == 'OK') {
-//           final results = jsonData['results'] as List;
-//           _nearbyHospitals = results.map((result) => Hospital.fromJson(result)).toList();
-
-//           _markers.clear();
-//           for (final hospital in _nearbyHospitals) {
-//             _markers.add(Marker(
-//               markerId: MarkerId(hospital.placeId),
-//               position: hospital.location,
-//               infoWindow: InfoWindow(title: hospital.name),
-//             ));
-//           }
-
-//           setState(() {
-//             _isLoading = false;
-//           });
-//         } else {
-//           // ... (API error handling as before)
-//         }
-//       } else {
-//         // ... (HTTP error handling as before)
-//       }
-//     } catch (e) {
-//       // ... (Other error handling as before)
-//     }
-//   }
-
-//   Future<void> _sendSOS() async {
-//     setState(() {
-//       _isSOSActive = true;
-//       _isLoading = true;
-//     });
-
-//     await _getCurrentLocation(); // Get location first
-
-//     if (_currentLocation != null) {
-//       // Show hospitals (already done in _getCurrentLocation)
-
-//       setState(() {
-//         _isSOSActive = false;
-//         _isLoading = false;
-//       });
-//     } else {
-//       setState(() {
-//         _isSOSActive = false;
-//         _isLoading = false;
-//       });
-//     }
-//   }
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(title: Text('SOS App')),
 //       body: Center(
-//         child: _isLoading
-//             ? CircularProgressIndicator()
-//             : Column(
+//         child: Column(
 //           mainAxisAlignment: MainAxisAlignment.center,
 //           children: <Widget>[
+//             Text('Bluetooth State: $bluetoothState'),
+//             Text('Connection Status: $connectionStatus'),
+//             if (connectedDevice != null)
+//               Text('Device Name: ${connectedDevice!.name}'),
+//             if (!isSafe)
+//               Text(
+//                 'Emergency!',
+//                 style: TextStyle(color: Colors.red, fontSize: 24),
+//               ),
+//             if (isSafe)
+//               Text(
+//                 'All Safe',
+//                 style: TextStyle(color: Colors.green, fontSize: 24),
+//               ),
 //             ElevatedButton(
-//               onPressed: _isSOSActive ? null : _sendSOS,
-//               child: Text(_isSOSActive ? 'Sending SOS...' : 'SOS'),
-//               style: ElevatedButton.styleFrom(
-//                 padding: EdgeInsets.all(20),
-//                 textStyle: TextStyle(fontSize: 24),
-//               ),
+//               onPressed: _startScan,
+//               child: Text('Scan and Connect'),
 //             ),
-//             Expanded(
-//               child: _currentLocation != null
-//                   ? GoogleMap(
-//                 mapType: MapType.normal,
-//                 initialCameraPosition: CameraPosition(
-//                   target: LatLng(_currentLocation!.latitude,
-//                       _currentLocation!.longitude),
-//                   zoom: 12.0,
-//                 ),
-//                 onMapCreated: (controller) => _mapController = controller,
-//                 markers: _markers,
-//               )
-//                   : Center(child: Text("Getting Location...")),
-//             ),
-//             Expanded(
-//               child: ListView.builder(
-//                 itemCount: _nearbyHospitals.length,
-//                 itemBuilder: (context, index) {
-//                   final hospital = _nearbyHospitals[index];
-//                   return ListTile(
-//                     title: Text(hospital.name),
-//                     subtitle: Text(hospital.vicinity),
-//                   );
-//                 },
-//               ),
-//             ),
+//             if (_gyroscopeValues != null)
+//               Text(
+//                   'Gyroscope: ${_gyroscopeValues!.map((v) => v.toStringAsFixed(2)).join(', ')}'),
 //           ],
 //         ),
 //       ),
-//     );
-//   }
-// }
-// class Hospital {
-//   final String name;
-//   final String vicinity;
-//   final LatLng location;
-//   final String placeId;
-
-//   Hospital({required this.name, required this.vicinity, required this.location, required this.placeId});
-
-//   factory Hospital.fromJson(Map<String, dynamic> json) {
-//     return Hospital(
-//       name: json['name'] ?? '',
-//       vicinity: json['vicinity'] ?? '',
-//       location: LatLng(
-//         json['geometry']['location']['lat'] ?? 0.0,
-//         json['geometry']['location']['lng'] ?? 0.0,
-//       ),
-//       placeId: json['place_id'] ?? '',
 //     );
 //   }
 // }

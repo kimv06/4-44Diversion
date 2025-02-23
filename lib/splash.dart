@@ -29,22 +29,24 @@ class _SplashscreenState extends State<Splashscreen> {
   Widget build(BuildContext context) {
     return GradientBackground(
       child: Scaffold(
-        body: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Center(
-              child: Image.asset('assets/logo2.png',
-              height: 128,
-              width: 270,
+        body: GradientBackground(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Center(
+                child: Image.asset('assets/logo2.png',
+                height: 128,
+                width: 270,
+                ),
               ),
-            ),
-            Center(
-              child: Image.asset('assets/splash.png',
-              height: 322,
-              width: 303,
+              Center(
+                child: Image.asset('assets/splash.png',
+                height: 322,
+                width: 303,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

@@ -12,7 +12,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 class HomeScreen extends StatelessWidget {
   final AuthUser? authUser; // Store the username
 
-  const HomeScreen({super.key, required this.authUser,});
+  const HomeScreen({super.key, required this.authUser, required String username,});
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +30,7 @@ class HomeScreen extends StatelessWidget {
                   // Header
                   Container(
                     padding: const EdgeInsets.all(16),
-                    color: const Color(0xFF5F9EA0),
+                    color: Color.fromRGBO(159, 95, 238, 1),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -45,29 +45,21 @@ class HomeScreen extends StatelessWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Hello, Moumita', // Use the username variable
+                                  'Hello, Monal', // Use the username variable
                                   style: const TextStyle(color: Colors.white),
                                 ),
-                                // const Text(
-                                //   'Good Morning',
-                                //   style: TextStyle(
-                                //     color: Colors.white,
-                                //     fontSize: 20,
-                                //     fontWeight: FontWeight.bold,
-                                //   ),
-                                //),
                               ],
                             ),
                           ],
                         ),
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: const Icon(Icons.notifications, color: Color(0xFF5F9EA0)),
-                        ),
+                        // Container(
+                        //   padding: const EdgeInsets.all(8),
+                        //   decoration: BoxDecoration(
+                        //     color: Colors.white,
+                        //     borderRadius: BorderRadius.circular(20),
+                        //   ),
+                        //   //child: const Icon(Icons.notifications, color: Color(0xFF5F9EA0)),
+                        // ),
                       ],
                     ),
                   ),
@@ -87,12 +79,12 @@ class HomeScreen extends StatelessWidget {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: const [
                               Text('Today'),
-                              Text('Jan, 2025'),
+                              Text('Feb, 2025'),
                             ],
                           ),
                           const SizedBox(height: 8),
                           const Text(
-                            'Appointment with Dr. Roy',
+                            'HAVE A GREAT DAY! KEEP YOURSELF HEALTHY!',
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -110,7 +102,7 @@ class HomeScreen extends StatelessWidget {
                                 ),
                                 decoration: BoxDecoration(
                                   color: index == 1
-                                      ? const Color(0xFF5F9EA0)
+                                      ? Color.fromRGBO(159, 95, 238, 1)
                                       : Colors.white,
                                   borderRadius: BorderRadius.circular(8),
                                   border: Border.all(color: Colors.grey.shade300),
@@ -118,13 +110,13 @@ class HomeScreen extends StatelessWidget {
                                 child: Column(
                                   children: [
                                     Text(
-                                      ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][index],
+                                      ['Sat', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri'][index],
                                       style: TextStyle(
                                         color: index == 1 ? Colors.white : Colors.grey,
                                       ),
                                     ),
                                     Text(
-                                      ['01', '02', '03', '04', '05', '06', '07'][index],
+                                      ['22', '23', '24', '25', '26', '27', '28'][index],
                                       style: TextStyle(
                                         color: index == 1 ? Colors.white : Colors.black,
                                         fontWeight: FontWeight.bold,
@@ -173,7 +165,7 @@ class HomeScreen extends StatelessWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
-                        const Icon(Icons.home, color: Color(0xFF5F9EA0)),
+                        const Icon(Icons.home,color: Color.fromRGBO(159, 95, 238, 1)),
                          IconButton(
                             onPressed: () {
                               Navigator.of(context).push(
@@ -184,9 +176,22 @@ class HomeScreen extends StatelessWidget {
                             },
                             icon: Icon(
                               Icons.monitor,
-                              color: Color.fromRGBO(211, 211, 211, 1.0),
+                              color: Color.fromRGBO(255, 255, 255, 1),
                             ),
-                          ),                              
+                          ),  
+                        // InkWell(
+                        //   onTap: () {
+                        //     Navigator.of(context).push(
+                        //       MaterialPageRoute(builder: (context) => MedicalBotScreen(),
+                        //       ),
+                        //     );
+                        //   },
+                        //   child: Image.asset(
+                        //     'chatbot.png',
+                        //     height: 80,
+                        //     width: 80,
+                        //   ),
+                        // ),                            
                         // Image.asset(
                         //   'assets/3rd.png',
                         //   height: 80,
@@ -203,6 +208,7 @@ class HomeScreen extends StatelessWidget {
                             'assets/3rd.png',
                             height: 80,
                             width: 80,
+                            color: Colors.white,
                           ),
                         ),
                         // Image.asset(
@@ -221,6 +227,7 @@ class HomeScreen extends StatelessWidget {
                             'assets/4th.png',
                             height: 80,
                             width: 80,
+                            color: Colors.white,
                           ),
                         ),
                         //const Icon(Icons.access_time, color: Color.fromRGBO(211, 211, 211, 100)),
@@ -234,7 +241,7 @@ class HomeScreen extends StatelessWidget {
                             },
                             icon: Icon(
                               Icons.access_time,
-                              color: Color.fromRGBO(211, 211, 211, 1.0),
+                              color: Color.fromRGBO(255, 255, 255, 1),
                             ),
                           ),     
                         InkWell(
@@ -248,6 +255,7 @@ class HomeScreen extends StatelessWidget {
                             'assets/6th.png',
                             height: 80,
                             width: 80,
+                            color: Colors.white,
                           ),
                         ),
                       ],
@@ -263,10 +271,10 @@ class HomeScreen extends StatelessWidget {
                   onPressed: () {
                     // Add your onPressed code here!
                     Navigator.of(context).push(
-                      MaterialPageRoute(builder: (context) => SOSScreen()),
+                      MaterialPageRoute(builder: (context) => SOSDetector()),
                     );
                   },
-                  backgroundColor: const Color(0xFF5F9EA0),
+                  backgroundColor: Color.fromRGBO(159, 95, 238, 1),
                   child: const Icon(FontAwesomeIcons.truckMedical, color: Colors.white),
                 ),
               ),
@@ -285,7 +293,7 @@ class HomeScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFF5F9EA0),
+        color: Color.fromRGBO(159, 95, 238, 1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -313,3 +321,135 @@ class HomeScreen extends StatelessWidget {
     );
   }
 }
+
+// import 'package:flutter/material.dart';
+// import 'package:myapp/auth/auth_user.dart';
+// import 'package:myapp/calender.dart';
+// import 'package:myapp/chatbot.dart';
+// import 'package:myapp/games.dart';
+// import 'package:myapp/main.dart';
+// import 'package:myapp/medication.dart';
+// import 'package:myapp/social.dart';
+// import 'package:myapp/sos.dart';
+// // import 'package:myapp/appointment_scheduler.dart'; // Import the scheduler file
+// import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+
+// class HomeScreen extends StatefulWidget {
+//   final AuthUser? authUser;
+
+//   const HomeScreen({super.key, required this.authUser});
+
+//   @override
+//   _HomeScreenState createState() => _HomeScreenState();
+// }
+
+// class _HomeScreenState extends State<HomeScreen> {
+//   String? nextAppointment = "No appointments scheduled"; // Placeholder text
+
+//   @override
+//   void initState() {
+//     super.initState();
+//     _fetchNextAppointment(); // Fetch appointment when screen loads
+//   }
+
+//   Future<void> _fetchNextAppointment() async {
+//     String? appointment = "No upcoming appointments"; // Placeholder text
+//     // Assuming `getNextAppointment()` is a function in `AppointmentSchedulerApp` that returns the next appointment details.
+
+//     setState(() {
+//       nextAppointment = appointment ?? "No upcoming appointments";
+//     });
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return GradientBackground(
+//       child: Scaffold(
+//         body: SafeArea(
+//           child: Stack(
+//             children: [
+//               Column(
+//                 children: [
+//                   // Header
+//                   Container(
+//                     padding: const EdgeInsets.all(16),
+//                     color: const Color(0xFF5F9EA0),
+//                     child: Row(
+//                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//                       children: [
+//                         Row(
+//                           children: [
+//                             const CircleAvatar(
+//                               backgroundColor: Colors.white,
+//                               child: Icon(Icons.person, color: Colors.grey),
+//                             ),
+//                             const SizedBox(width: 12),
+//                             Column(
+//                               crossAxisAlignment: CrossAxisAlignment.start,
+//                               children: [
+//                                 Text(
+//                                   'Hello,User', 
+//                                   style: const TextStyle(color: Colors.white),
+//                                 ),
+//                               ],
+//                             ),
+//                           ],
+//                         ),
+//                         Container(
+//                           padding: const EdgeInsets.all(8),
+//                           decoration: BoxDecoration(
+//                             color: Colors.white,
+//                             borderRadius: BorderRadius.circular(20),
+//                           ),
+//                           child: const Icon(Icons.notifications, color: Color(0xFF5F9EA0)),
+//                         ),
+//                       ],
+//                     ),
+//                   ),
+
+//                   // Calendar Card with Appointments
+//                   GestureDetector(
+//                     onTap: () {
+//                       // Navigator.of(context).push(
+//                       //   MaterialPageRoute(builder: (context) => AppointmentSchedulerApp()),
+//                       // );
+//                     },
+//                     child: Card(
+//                       margin: const EdgeInsets.all(16),
+//                       shape: RoundedRectangleBorder(
+//                         borderRadius: BorderRadius.circular(16),
+//                       ),
+//                       child: Padding(
+//                         padding: const EdgeInsets.all(16),
+//                         child: Column(
+//                           crossAxisAlignment: CrossAxisAlignment.start,
+//                           children: [
+//                             Row(
+//                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//                               children: [
+//                                 const Text('Upcoming Appointment'),
+//                                 Text(DateTime.now().toString().substring(0, 10)), // Show today's date
+//                               ],
+//                             ),
+//                             const SizedBox(height: 8),
+//                             Text(
+//                               nextAppointment!,
+//                               style: const TextStyle(
+//                                 fontSize: 18,
+//                                 fontWeight: FontWeight.bold,
+//                               ),
+//                             ),
+//                           ],
+//                         ),
+//                       ),
+//                     ),
+//                   ),
+//                 ],
+//               ),
+//             ],
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+// }

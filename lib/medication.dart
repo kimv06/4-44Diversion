@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:myapp/main.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:flutter_tts/flutter_tts.dart';
@@ -112,56 +113,58 @@ class _MedicationReminderPageState extends State<MedicationReminderPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Add New Medication'),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            TextField(
-              controller: _medicineNameController,
-              decoration: InputDecoration(labelText: 'Medicine Name'),
-            ),
-            TextField(
-              controller: _dosageController,
-              decoration: InputDecoration(labelText: 'Dosage (mg)'),
-              keyboardType: TextInputType.number,
-            ),
-            SizedBox(height: 16.0), // Add some space
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 12.0),
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey),
-                borderRadius: BorderRadius.circular(8.0),
+    return GradientBackground(
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text('Add New Medication'),
+        ),
+        body: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              TextField(
+                controller: _medicineNameController,
+                decoration: InputDecoration(labelText: 'Medicine Name'),
               ),
-              child: DropdownButtonFormField<String>(
-                value: _medicineType,
-                decoration: InputDecoration(
-                  labelText: 'Medicine Type',
-                  border: InputBorder.none,
+              TextField(
+                controller: _dosageController,
+                decoration: InputDecoration(labelText: 'Dosage (mg)'),
+                keyboardType: TextInputType.number,
+              ),
+              SizedBox(height: 16.0), // Add some space
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 12.0),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey),
+                  borderRadius: BorderRadius.circular(8.0),
                 ),
-                onChanged: (String? newValue) {
-                  setState(() {
-                    _medicineType = newValue!;
-                  });
-                },
-                items: <String>['Pills', 'Tablets', 'Syringe', 'Bottles']
-                    .map<DropdownMenuItem<String>>((String value) {
-                  return DropdownMenuItem<String>(
-                    value: value,
-                    child: Text(value),
-                  );
-                }).toList(),
+                child: DropdownButtonFormField<String>(
+                  value: _medicineType,
+                  decoration: InputDecoration(
+                    labelText: 'Medicine Type',
+                    border: InputBorder.none,
+                  ),
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      _medicineType = newValue!;
+                    });
+                  },
+                  items: <String>['Pills', 'Tablets', 'Syringe', 'Bottles']
+                      .map<DropdownMenuItem<String>>((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(value),
+                    );
+                  }).toList(),
+                ),
               ),
-            ),
-            SizedBox(height: 20.0), // Add some space
-            ElevatedButton(
-              onPressed: _setReminders,
-              child: Text('Confirm'),
-            ),
-          ],
+              SizedBox(height: 20.0), // Add some space
+              ElevatedButton(
+                onPressed: _setReminders,
+                child: Text('Confirm'),
+              ),
+            ],
+          ),
         ),
       ),
     );

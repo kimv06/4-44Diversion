@@ -1,15 +1,10 @@
+// // import 'package:flutter/material.dart';
 // import 'package:flutter/material.dart';
 // import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 // import 'package:table_calendar/table_calendar.dart';
 // import 'package:timezone/timezone.dart' as tz;
 // import 'package:timezone/data/latest.dart' as tz;
 // import 'package:intl/intl.dart';
-// import 'package:flutter_tts/flutter_tts.dart';
-
-// void main() {
-//   tz.initializeTimeZones();
-//   runApp(const AppointmentSchedulerApp());
-// }
 
 // class AppointmentSchedulerApp extends StatelessWidget {
 //   const AppointmentSchedulerApp({super.key});
@@ -50,17 +45,15 @@
 
 // class _AppointmentSchedulerState extends State<AppointmentScheduler> {
 //   late final FlutterLocalNotificationsPlugin _notificationsPlugin;
-//   late final FlutterTts _flutterTts;
 //   DateTime selectedDate = DateTime.now();
 //   TimeOfDay selectedTime = TimeOfDay.now();
 //   String appointmentTitle = '';
-//   final CalendarFormat _calendarFormat = CalendarFormat.month;
+//   CalendarFormat _calendarFormat = CalendarFormat.month;
 
 //   @override
 //   void initState() {
 //     super.initState();
 //     _notificationsPlugin = FlutterLocalNotificationsPlugin();
-//     _flutterTts = FlutterTts(); // Initialize text-to-speech
 //     _initializeNotifications();
 //   }
 
@@ -97,12 +90,9 @@
 //       message,
 //       scheduledDateTime,
 //       platformChannelSpecifics,
-//       uiLocalNotificationDateInterpretation:
-//           UILocalNotificationDateInterpretation.absoluteTime, androidScheduleMode: AndroidScheduleMode.inexact,
+//       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+//       uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
 //     );
-
-//     // Use text-to-speech to speak the reminder message
-//     await _flutterTts.speak(message);
 //   }
 
 //   void _scheduleAppointment() {
@@ -245,8 +235,8 @@
 //             ElevatedButton(onPressed: _scheduleAppointment, child: const Text('Schedule Appointment')),
 //           ],
 //         ),
-//      ),
-//     );  
+//       ),
+//     );
 //   }
 // }
 
@@ -271,15 +261,16 @@ class AppointmentSchedulerApp extends StatelessWidget {
     return MaterialApp(
       title: 'Appointment Scheduler',
       theme: ThemeData(
-        primarySwatch: Colors.teal,
+        primarySwatch: Colors.purple,
         scaffoldBackgroundColor: Colors.grey[100],
         appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.teal,
-          titleTextStyle: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          backgroundColor: Colors.purple,
+          titleTextStyle:
+              TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.teal,
+            backgroundColor: Colors.purple,
             foregroundColor: Colors.white,
           ),
         ),
@@ -291,6 +282,8 @@ class AppointmentSchedulerApp extends StatelessWidget {
       home: const AppointmentScheduler(),
     );
   }
+
+  static getScheduledAppointments() {}
 }
 
 class AppointmentScheduler extends StatefulWidget {
@@ -306,7 +299,7 @@ class _AppointmentSchedulerState extends State<AppointmentScheduler> {
   DateTime selectedDate = DateTime.now();
   TimeOfDay selectedTime = TimeOfDay.now();
   String appointmentTitle = '';
-  final CalendarFormat _calendarFormat = CalendarFormat.month;
+  CalendarFormat _calendarFormat = CalendarFormat.month;
 
   @override
   void initState() {
@@ -328,13 +321,13 @@ class _AppointmentSchedulerState extends State<AppointmentScheduler> {
   }
 
   Future<void> _initializeTts() async {
-    // Set the language and other properties if needed
     await _flutterTts.setLanguage("en-US");
     await _flutterTts.setSpeechRate(1.0);
   }
 
   Future<void> _scheduleNotification(DateTime dateTime, String message) async {
-    final tz.TZDateTime scheduledDateTime = tz.TZDateTime.from(dateTime, tz.local);
+    final tz.TZDateTime scheduledDateTime =
+        tz.TZDateTime.from(dateTime, tz.local);
     int notificationId = dateTime.millisecondsSinceEpoch ~/ 1000; // Unique ID
 
     const AndroidNotificationDetails androidPlatformChannelSpecifics =
@@ -356,9 +349,9 @@ class _AppointmentSchedulerState extends State<AppointmentScheduler> {
       message,
       scheduledDateTime,
       platformChannelSpecifics,
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       uiLocalNotificationDateInterpretation:
           UILocalNotificationDateInterpretation.absoluteTime,
-      androidScheduleMode: AndroidScheduleMode.inexact,
     );
 
     // Use text-to-speech to speak the reminder message
@@ -382,20 +375,26 @@ class _AppointmentSchedulerState extends State<AppointmentScheduler> {
       );
 
       if (appointmentDateTime.isAfter(DateTime.now())) {
-        final DateTime reminderOneDayBefore = appointmentDateTime.subtract(const Duration(days: 1));
-        final DateTime reminderSixHoursBefore = appointmentDateTime.subtract(const Duration(hours: 6));
+        final DateTime reminderOneDayBefore =
+            appointmentDateTime.subtract(const Duration(days: 1));
+        final DateTime reminderSixHoursBefore =
+            appointmentDateTime.subtract(const Duration(hours: 6));
 
         if (reminderOneDayBefore.isAfter(DateTime.now())) {
-          _scheduleNotification(reminderOneDayBefore, 'Reminder: $appointmentTitle is tomorrow!');
+          _scheduleNotification(
+              reminderOneDayBefore, 'Reminder: $appointmentTitle is tomorrow!');
         }
         if (reminderSixHoursBefore.isAfter(DateTime.now())) {
-          _scheduleNotification(reminderSixHoursBefore, 'Reminder: $appointmentTitle in 6 hours!');
+          _scheduleNotification(reminderSixHoursBefore,
+              'Reminder: $appointmentTitle in 6 hours!');
         }
 
-        _scheduleNotification(appointmentDateTime, 'It’s time for your appointment: $appointmentTitle.');
+        _scheduleNotification(appointmentDateTime,
+            'It’s time for your appointment: $appointmentTitle.');
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Appointment scheduled for $appointmentTitle')),
+          SnackBar(
+              content: Text('Appointment scheduled for $appointmentTitle')),
         );
 
         setState(() {
@@ -403,7 +402,8 @@ class _AppointmentSchedulerState extends State<AppointmentScheduler> {
         });
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Appointment time must be in the future.')),
+          const SnackBar(
+              content: Text('Appointment time must be in the future.')),
         );
       }
     } else {
@@ -423,14 +423,14 @@ class _AppointmentSchedulerState extends State<AppointmentScheduler> {
         return Theme(
           data: ThemeData.light().copyWith(
             colorScheme: ColorScheme.light(
-              primary: Colors.teal,
+              primary: Colors.purple,
               onPrimary: Colors.white,
               surface: Colors.white,
               onSurface: Colors.black,
             ),
             textButtonTheme: TextButtonThemeData(
               style: TextButton.styleFrom(
-                foregroundColor: Colors.teal,
+                foregroundColor: Colors.purple,
               ),
             ),
           ),
@@ -453,14 +453,14 @@ class _AppointmentSchedulerState extends State<AppointmentScheduler> {
         return Theme(
           data: ThemeData.light().copyWith(
             colorScheme: ColorScheme.light(
-              primary: Colors.teal,
+              primary: Colors.purple,
               onPrimary: Colors.white,
               surface: Colors.white,
               onSurface: Colors.black,
             ),
             textButtonTheme: TextButtonThemeData(
               style: TextButton.styleFrom(
-                foregroundColor: Colors.teal,
+                foregroundColor: Colors.purple,
               ),
             ),
           ),
@@ -498,15 +498,23 @@ class _AppointmentSchedulerState extends State<AppointmentScheduler> {
             ),
             const SizedBox(height: 16),
             TextField(
-              decoration: const InputDecoration(labelText: 'Appointment Title', border: OutlineInputBorder()),
+              decoration: const InputDecoration(
+                  labelText: 'Appointment Title', border: OutlineInputBorder()),
               onChanged: (value) => appointmentTitle = value,
             ),
             const SizedBox(height: 16),
-            ElevatedButton(onPressed: () => _selectDate(context), child: Text('Select Date: ${DateFormat('yyyy-MM-dd').format(selectedDate)}')),
+            ElevatedButton(
+                onPressed: () => _selectDate(context),
+                child: Text(
+                    'Select Date: ${DateFormat('yyyy-MM-dd').format(selectedDate)}')),
             const SizedBox(height: 16),
-            ElevatedButton(onPressed: () => _selectTime(context), child: Text('Select Time: ${selectedTime.format(context)}')),
+            ElevatedButton(
+                onPressed: () => _selectTime(context),
+                child: Text('Select Time: ${selectedTime.format(context)}')),
             const SizedBox(height: 16),
-            ElevatedButton(onPressed: _scheduleAppointment, child: const Text('Schedule Appointment')),
+            ElevatedButton(
+                onPressed: _scheduleAppointment,
+                child: const Text('Schedule Appointment')),
           ],
         ),
       ),

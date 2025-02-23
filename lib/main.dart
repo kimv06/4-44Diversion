@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart' as flutter_gen;
@@ -46,7 +45,6 @@ class MyApp extends StatelessWidget {
   }
 }
 
-
 class GradientBackground extends StatelessWidget {
   final Widget child;
   const GradientBackground({super.key, required this.child});
@@ -59,9 +57,9 @@ class GradientBackground extends StatelessWidget {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            Color.fromRGBO(96, 149, 145, 100), // Top color
-            Color.fromRGBO(54, 84, 81, 100),
-            Color.fromRGBO(36, 60, 58, 100) // Bottom color
+            Color.fromRGBO(159, 95, 238, 1), // Top color
+            Color.fromRGBO(123, 45, 178, 1),
+            Color.fromRGBO(81, 34, 112, 1) // Bottom color
           ],
           stops: [
             0.4,  // Red covers the first 50%
@@ -98,7 +96,7 @@ class HomePage extends StatelessWidget {
         } else if (state is AuthStateOnboardingComplete) {
           return LoginScreen();
         } else if (state is AuthStateLoggedIn) {
-          return HomeScreen(authUser: state.user);
+          return HomeScreen(authUser: state.user, username: '',);
         } else if (state is AuthStateNeedsVerification) {
           return EmailVerificationPage();
         } else if (state is AuthStateLoggedOut) {
@@ -116,4 +114,3 @@ class HomePage extends StatelessWidget {
     );
   }
 }
-
